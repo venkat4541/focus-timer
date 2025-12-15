@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Modern Pomodoro timer app with multiple timers and daily EST resets. Boost your productivity with beautiful, customizable timers.">
+    <title>Pomodoro Timer - Boost Your Productivity</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pomodoro">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="background-gradient"></div>
+
+    <header>
+        <div class="header-top">
+            <h1>🍅 Pomodoro Timers</h1>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+        <p class="subtitle">Focus better, achieve more</p>
+        <div class="current-time" id="current-time">
+            <span id="time-display">--:--</span>
+            <span id="timezone-display" class="timezone-badge">---</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="controls">
+            <button id="add-timer-btn" class="btn btn-primary">
+                <span class="btn-icon">+</span>
+                Add New Timer
+            </button>
+        </div>
+
+        <div id="timers-container" class="timers-grid">
+            <!-- Timer cards will be dynamically added here -->
+        </div>
+
+        <div id="empty-state" class="empty-state">
+            <div class="empty-icon">⏱️</div>
+            <h2>No timers yet</h2>
+            <p>Click "Add New Timer" to create your first Pomodoro timer</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Timers reset daily at midnight <span id="footer-timezone">in your timezone</span> • Data saved locally</p>
+    </footer>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h3>Delete Timer?</h3>
+            <p id="delete-message">Are you sure you want to delete this timer?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancel-delete">Cancel</button>
+                <button class="btn btn-danger" id="confirm-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

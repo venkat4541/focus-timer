@@ -426,6 +426,87 @@ main {
     margin-top: 0.25rem;
 }
 
+/* ===== Timer Metadata ===== */
+.timer-meta {
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.timer-created {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* ===== Timer Mode Toggle ===== */
+.timer-mode-toggle {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    transition: var(--transition-base);
+    border-radius: var(--radius-full);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: var(--color-text-muted);
+    transition: var(--transition-base);
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--gradient-primary);
+    border-color: transparent;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+    background: white;
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    min-width: 80px;
+}
+
 .timer-duration-input {
     margin-top: var(--spacing-sm);
     display: flex;

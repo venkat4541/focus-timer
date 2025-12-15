@@ -23,6 +23,9 @@ class PomodoroTimer {
         this.isRunning = false;
         this.phase = 'work'; // 'work', 'shortBreak', 'longBreak'
         this.sessionsCompleted = 0;
+        this.createdAt = Date.now(); // Track when timer was created
+        this.isCountUp = false; // false = countdown, true = countup (stopwatch)
+        this.elapsedTime = 0; // For stopwatch mode
     }
 
     start() {
@@ -36,15 +39,27 @@ class PomodoroTimer {
     reset() {
         this.isRunning = false;
         this.phase = 'work';
-        this.timeLeft = this.customDuration * 60; // Use custom duration
+        if (this.isCountUp) {
+            this.elapsedTime = 0;
+        } else {
+            this.timeLeft = this.customDuration * 60; // Use custom duration
+        }
     }
 
     tick() {
-        if (this.isRunning && this.timeLeft > 0) {
-            this.timeLeft--;
-            
-            if (this.timeLeft === 0) {
-                this.onTimerComplete();
+        if (this.isRunning) {
+            if (this.isCountUp) {
+                // Stopwatch mode - count up
+                this.elapsedTime++;
+            } else {
+                // Countdown mode
+                if (this.timeLeft > 0) {
+                    this.timeLeft--;
+                    
+                    if (this.timeLeft === 0) {
+                        this.onTimerComplete();
+                    }
+                }
             }
         }
     }
@@ -83,9 +98,26 @@ class PomodoroTimer {
     }
 
     formatTime() {
-        const minutes = Math.floor(this.timeLeft / 60);
-        const seconds = this.timeLeft % 60;
+        const timeToDisplay = this.isCountUp ? this.elapsedTime : this.timeLeft;
+        const minutes = Math.floor(timeToDisplay / 60);
+        const seconds = timeToDisplay % 60;
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    getCreatedAtDisplay() {
+        const date = new Date(this.createdAt);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 }
 
@@ -171,7 +203,10 @@ function saveTimers() {
         isRunning: timer.isRunning, // Now persist running state
         phase: timer.phase,
         sessionsCompleted: timer.sessionsCompleted,
-        lastSaveTime: Date.now() // Track when we saved
+        lastSaveTime: Date.now(), // Track when we saved
+        createdAt: timer.createdAt,
+        isCountUp: timer.isCountUp,
+        elapsedTime: timer.elapsedTime
     }));
     
     localStorage.setItem('timers', JSON.stringify(timersData));
@@ -188,16 +223,26 @@ function loadTimers() {
             const timer = new PomodoroTimer(data.id, data.title || '', data.customDuration || 25);
             timer.phase = data.phase;
             timer.sessionsCompleted = data.sessionsCompleted;
+            timer.createdAt = data.createdAt || now;
+            timer.isCountUp = data.isCountUp || false;
+            timer.elapsedTime = data.elapsedTime || 0;
             
             // Calculate elapsed time if timer was running
             if (data.isRunning && data.lastSaveTime) {
                 const elapsedSeconds = Math.floor((now - data.lastSaveTime) / 1000);
-                timer.timeLeft = Math.max(0, data.timeLeft - elapsedSeconds);
-                timer.isRunning = timer.timeLeft > 0; // Only keep running if time remains
                 
-                // If timer completed while away, handle completion
-                if (timer.timeLeft === 0) {
-                    timer.onTimerComplete();
+                if (timer.isCountUp) {
+                    // Stopwatch mode - add elapsed time
+                    timer.elapsedTime += elapsedSeconds;
+                    timer.isRunning = true;
+                } else {
+                    // Countdown mode
+                    timer.timeLeft = Math.max(0, data.timeLeft - elapsedSeconds);
+                    timer.isRunning = timer.timeLeft > 0;
+                    
+                    if (timer.timeLeft === 0) {
+                        timer.onTimerComplete();
+                    }
                 }
             } else {
                 timer.timeLeft = data.timeLeft;
@@ -283,19 +328,34 @@ function createTimerCard(timer) {
             <button class="timer-delete" onclick="deleteTimer(${timer.id})" aria-label="Delete timer">×</button>
         </div>
         
+        <div class="timer-meta">
+            <span class="timer-created">Created ${timer.getCreatedAtDisplay()}</span>
+        </div>
+        
         <div class="timer-display">
             <div class="timer-time ${timer.isRunning ? 'active' : ''}" id="time-${timer.id}">
                 ${timer.formatTime()}
             </div>
-            <div class="timer-phase" id="phase-${timer.id}">${timer.getPhaseDisplay()}</div>
+            <div class="timer-phase" id="phase-${timer.id}">${timer.isCountUp ? 'Stopwatch' : timer.getPhaseDisplay()}</div>
             <div class="timer-session" id="session-${timer.id}">
-                Session ${timer.sessionsCompleted + 1}
+                ${timer.isCountUp ? 'Count Up Mode' : `Session ${timer.sessionsCompleted + 1}`}
             </div>
+            
+            <div class="timer-mode-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="mode-${timer.id}" ${timer.isCountUp ? 'checked' : ''} onchange="toggleTimerMode(${timer.id})" />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">${timer.isCountUp ? 'Stopwatch' : 'Countdown'}</span>
+            </div>
+            
+            ${!timer.isCountUp ? `
             <div class="timer-duration-input">
                 <label for="duration-${timer.id}">Duration:</label>
                 <input type="number" id="duration-${timer.id}" min="1" max="60" value="${timer.customDuration}" onchange="updateTimerDuration(${timer.id}, this.value)" />
                 <span>min</span>
             </div>
+            ` : ''}
         </div>
         
         <div class="timer-controls">
@@ -316,6 +376,7 @@ function updateTimerDisplay(timer) {
     const phaseElement = document.getElementById(`phase-${timer.id}`);
     const sessionElement = document.getElementById(`session-${timer.id}`);
     const toggleButton = document.getElementById(`toggle-${timer.id}`);
+    const toggleLabel = document.querySelector(`#timer-${timer.id} .toggle-label`);
     
     if (timeElement) {
         timeElement.textContent = timer.formatTime();
@@ -328,15 +389,19 @@ function updateTimerDisplay(timer) {
     }
     
     if (phaseElement) {
-        phaseElement.textContent = timer.getPhaseDisplay();
+        phaseElement.textContent = timer.isCountUp ? 'Stopwatch' : timer.getPhaseDisplay();
     }
     
     if (sessionElement) {
-        sessionElement.textContent = `Session ${timer.sessionsCompleted + 1}`;
+        sessionElement.textContent = timer.isCountUp ? 'Count Up Mode' : `Session ${timer.sessionsCompleted + 1}`;
     }
     
     if (toggleButton) {
         toggleButton.innerHTML = timer.isRunning ? '⏸ Pause' : '▶ Start';
+    }
+    
+    if (toggleLabel) {
+        toggleLabel.textContent = timer.isCountUp ? 'Stopwatch' : 'Countdown';
     }
 }
 
@@ -434,6 +499,31 @@ function updateTimerDuration(id, newDuration) {
     }
     
     saveTimers();
+}
+
+function toggleTimerMode(id) {
+    const timer = timers.find(t => t.id === id);
+    if (!timer) return;
+    
+    // Stop timer if running
+    if (timer.isRunning) {
+        timer.pause();
+        stopTimerInterval(timer);
+    }
+    
+    // Toggle mode
+    timer.isCountUp = !timer.isCountUp;
+    
+    // Reset timer values
+    if (timer.isCountUp) {
+        timer.elapsedTime = 0;
+    } else {
+        timer.timeLeft = timer.customDuration * 60;
+        timer.phase = 'work';
+    }
+    
+    saveTimers();
+    renderTimers(); // Re-render to show/hide duration input
 }
 
 // ===== Current Time Display =====
@@ -653,3 +743,4 @@ window.resetTimer = resetTimer;
 window.deleteTimer = showDeleteConfirmation; // Changed to show confirmation first
 window.editTimerTitle = editTimerTitle;
 window.updateTimerDuration = updateTimerDuration;
+window.toggleTimerMode = toggleTimerMode;

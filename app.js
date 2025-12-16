@@ -266,20 +266,6 @@ function addTimer() {
     startTimerInterval(timer);
 }
 
-function deleteTimer(id) {
-    // Stop the interval
-    if (timerIntervals[id]) {
-        clearInterval(timerIntervals[id]);
-        delete timerIntervals[id];
-    }
-    
-    // Remove from array
-    timers = timers.filter(timer => timer.id !== id);
-    
-    saveTimers();
-    renderTimers();
-}
-
 function startTimerInterval(timer) {
     if (timerIntervals[timer.id]) {
         clearInterval(timerIntervals[timer.id]);

@@ -1,13 +1,13 @@
 const CACHE_NAME = 'pomodoro-timer-v1';
 const urlsToCache = [
-  '/focus-timer/',
-  '/focus-timer/index.html',
-  '/focus-timer/index.css',
-  '/focus-timer/app.js',
-  '/focus-timer/manifest.json',
-  '/focus-timer/icon-192.png',
-  '/focus-timer/icon-512.png',
-  '/focus-timer/apple-touch-icon.png'
+  '/',
+  '/index.html',
+  '/index.css',
+  '/app.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install event - cache resources
